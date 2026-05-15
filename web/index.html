@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Checker</title>
+    <script src="/static/lib/tailwindcss.js"></script>
+    <script src="/static/lib/lucide.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: rgba(30, 41, 59, 0.7);
+            --accent-1: #3b82f6;
+            --accent-2: #10b981;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        [data-theme="purple"] { --bg-primary: #1a1025; --bg-secondary: rgba(45,27,62,0.7); --accent-1: #a855f7; --accent-2: #ec4899; --text-primary: #faf5ff; --text-secondary: #a78bfa; --border-color: rgba(168,85,247,0.2); }
+        [data-theme="forest"] { --bg-primary: #0d1f17; --bg-secondary: rgba(20,45,35,0.7); --accent-1: #22c55e; --accent-2: #14b8a6; --text-primary: #f0fdf4; --text-secondary: #86efac; --border-color: rgba(34,197,94,0.2); }
+        [data-theme="sunset"] { --bg-primary: #1c1410; --bg-secondary: rgba(50,30,20,0.7); --accent-1: #f97316; --accent-2: #ef4444; --text-primary: #fff7ed; --text-secondary: #fdba74; --border-color: rgba(249,115,22,0.2); }
+        [data-theme="light"] { --bg-primary: #f1f5f9; --bg-secondary: rgba(255,255,255,0.95); --accent-1: #2563eb; --accent-2: #059669; --text-primary: #000000; --text-secondary: #000000; --border-color: rgba(0,0,0,0.2); }
+        [data-theme="light"] .text-slate-400,[data-theme="light"] .text-slate-500,[data-theme="light"] .text-slate-300,[data-theme="light"] .text-slate-600,[data-theme="light"] .text-white,[data-theme="light"] .text-emerald-400,[data-theme="light"] .text-emerald-500,[data-theme="light"] .text-blue-400,[data-theme="light"] .text-blue-300,[data-theme="light"] .text-purple-400,[data-theme="light"] .text-purple-300,[data-theme="light"] .text-orange-400,[data-theme="light"] .text-cyan-400,[data-theme="light"] .text-red-400,[data-theme="light"] .text-amber-400,[data-theme="light"] p,[data-theme="light"] span,[data-theme="light"] label,[data-theme="light"] td,[data-theme="light"] th,[data-theme="light"] h1,[data-theme="light"] h2,[data-theme="light"] h3{color:#000000!important}
+        [data-theme="light"] .bg-slate-700,[data-theme="light"] .bg-slate-800,[data-theme="light"] .bg-slate-800\/50,[data-theme="light"] .bg-slate-800\/20,[data-theme="light"] .bg-slate-900,[data-theme="light"] .bg-slate-900\/30,[data-theme="light"] .bg-slate-900\/50{background-color:#e2e8f0!important}
+        [data-theme="light"] .hover\:bg-slate-800\/50:hover,[data-theme="light"] .hover\:bg-slate-800\/20:hover,[data-theme="light"] .hover\:bg-slate-700:hover,[data-theme="light"] .hover\:bg-slate-600:hover{background-color:#cbd5e1!important}
+        [data-theme="light"] .border-slate-700,[data-theme="light"] .border-slate-700\/50,[data-theme="light"] .border-slate-800{border-color:#94a3b8!important}
+        [data-theme="light"] .text-transparent{color:transparent!important}
+        [data-theme="light"] input::placeholder{color:#475569!important}
+        body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background-color:var(--bg-primary);color:var(--text-primary);transition:background-color .3s,color .3s}
+        .glass{background:var(--bg-secondary);backdrop-filter:blur(10px);border:1px solid var(--border-color);transition:background .3s,border-color .3s}
+        .stat-card{transition:transform .3s,box-shadow .3s}
+        .stat-card:hover{transform:translateY(-5px);box-shadow:0 10px 25px -5px rgba(0,0,0,.3)}
+        .theme-btn{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.3);transition:transform .2s,border-color .2s}
+        .theme-btn:hover{transform:scale(1.2);border-color:rgba(255,255,255,.8)}
+        .theme-btn.active{border-color:#fff;box-shadow:0 0 10px rgba(255,255,255,.5)}
+        .lang-btn{cursor:pointer;font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-secondary);transition:all .2s}
+        .lang-btn:hover{color:var(--text-primary);border-color:var(--accent-1)}
+        .lang-btn.active{color:var(--accent-1);border-color:var(--accent-1)}
+        @media(max-width:640px){.mobile-stack{flex-direction:column!important;align-items:stretch!important}.mobile-full{width:100%!important}}
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col p-3 sm:p-6">
+    <!-- Header -->
+    <header class="max-w-7xl mx-auto w-full mb-4 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
+        <div>
+            <h1 class="text-xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent" data-i18n="title">Proxy Pool Rotator</h1>
+            <p class="text-xs sm:text-base text-slate-400" data-i18n="subtitle">Real-time proxy IP check &amp; dispatch console</p>
+        </div>
+        <div class="flex gap-2 sm:gap-4 items-center flex-wrap">
+            <!-- Language -->
+            <div class="flex gap-1 items-center">
+                <button class="lang-btn active" onclick="setLang('zh')">中</button>
+                <button class="lang-btn" onclick="setLang('en')">EN</button>
+            </div>
+            <!-- Theme -->
+            <div class="flex gap-1.5 sm:gap-2 items-center px-2 sm:px-3 py-1.5 sm:py-2 glass rounded-xl">
+                <span class="hidden sm:inline text-[10px] uppercase text-slate-500 font-bold mr-1" data-i18n="theme">Theme</span>
+                <button class="theme-btn active" style="background:linear-gradient(135deg,#3b82f6,#10b981)" onclick="setTheme('ocean')" title="Ocean"></button>
+                <button class="theme-btn" style="background:linear-gradient(135deg,#a855f7,#ec4899)" onclick="setTheme('purple')" title="Purple"></button>
+                <button class="theme-btn" style="background:linear-gradient(135deg,#22c55e,#14b8a6)" onclick="setTheme('forest')" title="Forest"></button>
+                <button class="theme-btn" style="background:linear-gradient(135deg,#f97316,#ef4444)" onclick="setTheme('sunset')" title="Sunset"></button>
+                <button class="theme-btn" style="background:linear-gradient(135deg,#f8fafc,#e2e8f0);border-color:rgba(0,0,0,.2)" onclick="setTheme('light')" title="Light"></button>
+            </div>
+            <div class="px-2 sm:px-4 py-1 sm:py-2 glass rounded-2xl flex flex-col items-end">
+                <span class="text-[10px] uppercase text-slate-500 font-bold" data-i18n="db_total">DB Total</span>
+                <span class="text-lg sm:text-xl font-bold text-blue-400" id="db-total">--</span>
+            </div>
+            <div class="px-2 sm:px-4 py-1 sm:py-2 glass rounded-2xl flex flex-col items-end border-emerald-500/30">
+                <span class="text-[10px] uppercase text-slate-500 font-bold" data-i18n="online">Online</span>
+                <span class="text-lg sm:text-xl font-bold text-emerald-400" id="total-active">--</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Cards -->
+    <main class="max-w-7xl mx-auto w-full grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div class="stat-card glass p-4 sm:p-6 rounded-2xl border-l-4 border-blue-500 cursor-pointer hover:bg-slate-800/50" onclick="selectProtocol('http')">
+            <div class="flex justify-between items-start mb-2 sm:mb-4">
+                <div class="p-2 sm:p-3 bg-blue-500/10 rounded-xl text-blue-400"><i data-lucide="globe"></i></div>
+                <span class="text-xs font-semibold px-2 py-1 bg-blue-500/10 text-blue-400 rounded-md">HTTP</span></div>
+            <div class="text-2xl sm:text-4xl font-bold mb-1" id="count-http">--</div>
+            <div class="text-xs text-slate-500 uppercase tracking-wider" data-i18n="available">Available</div>
+        </div>
+        <div class="stat-card glass p-4 sm:p-6 rounded-2xl border-l-4 border-emerald-500 cursor-pointer hover:bg-slate-800/50" onclick="selectProtocol('https')">
+            <div class="flex justify-between items-start mb-2 sm:mb-4">
+                <div class="p-2 sm:p-3 bg-emerald-500/10 rounded-xl text-emerald-400"><i data-lucide="shield-check"></i></div>
+                <span class="text-xs font-semibold px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-md">HTTPS</span></div>
+            <div class="text-2xl sm:text-4xl font-bold mb-1" id="count-https">--</div>
+            <div class="text-xs text-slate-500 uppercase tracking-wider" data-i18n="available">Available</div>
+        </div>
+        <div class="stat-card glass p-4 sm:p-6 rounded-2xl border-l-4 border-purple-500 cursor-pointer hover:bg-slate-800/50" onclick="selectProtocol('socks4')">
+            <div class="flex justify-between items-start mb-2 sm:mb-4">
+                <div class="p-2 sm:p-3 bg-purple-500/10 rounded-xl text-purple-400"><i data-lucide="zap"></i></div>
+                <span class="text-xs font-semibold px-2 py-1 bg-purple-500/10 text-purple-400 rounded-md">SOCKS4</span></div>
+            <div class="text-2xl sm:text-4xl font-bold mb-1" id="count-socks4">--</div>
+            <div class="text-xs text-slate-500 uppercase tracking-wider" data-i18n="available">Available</div>
+        </div>
+        <div class="stat-card glass p-4 sm:p-6 rounded-2xl border-l-4 border-amber-500 cursor-pointer hover:bg-slate-800/50" onclick="selectProtocol('socks5')">
+            <div class="flex justify-between items-start mb-2 sm:mb-4">
+                <div class="p-2 sm:p-3 bg-amber-500/10 rounded-xl text-amber-400"><i data-lucide="rocket"></i></div>
+                <span class="text-xs font-semibold px-2 py-1 bg-amber-500/10 text-amber-400 rounded-md">SOCKS5</span></div>
+            <div class="text-2xl sm:text-4xl font-bold mb-1" id="count-socks5">--</div>
+            <div class="text-xs text-slate-500 uppercase tracking-wider" data-i18n="available">Available</div>
+        </div>
+    </main>
+
+    <!-- API Tester -->
+    <div class="max-w-7xl mx-auto w-full mt-4 sm:mt-8">
+        <div class="glass p-4 sm:p-8 rounded-2xl border border-slate-700/50">
+            <div class="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center mb-4 sm:mb-6">
+                <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2">
+                    <i data-lucide="terminal-square" class="text-blue-400"></i>
+                    <span class="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent" data-i18n="api_tester">API Tester</span>
+                </h2>
+                <div class="flex gap-3 sm:gap-8 items-center" id="system-stats">
+                    <div class="flex items-center gap-2 px-3 py-2 sm:px-6 sm:py-4 bg-slate-800/50 rounded-xl sm:rounded-2xl border border-slate-700/50 shadow-md">
+                        <i data-lucide="cpu" class="w-6 h-6 sm:w-12 sm:h-12 text-blue-400"></i>
+                        <div class="flex flex-col"><span class="text-[10px] sm:text-sm uppercase text-slate-500 font-bold mb-1 sm:mb-2">CPU</span>
+                        <span class="text-base sm:text-3xl font-mono font-bold" id="cpu-usage">--%</span></div>
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-2 sm:px-6 sm:py-4 bg-slate-800/50 rounded-xl sm:rounded-2xl border border-slate-700/50 shadow-md">
+                        <i data-lucide="memory-stick" class="w-6 h-6 sm:w-12 sm:h-12 text-purple-400"></i>
+                        <div class="flex flex-col"><span class="text-[10px] sm:text-sm uppercase text-slate-500 font-bold mb-1 sm:mb-2">MEM</span>
+                        <span class="text-base sm:text-3xl font-mono font-bold" id="mem-usage">--%</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-start">
+                <div class="space-y-3 sm:space-y-4">
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 sm:mb-2" data-i18n="country_label">Country</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="text" id="api-country-input" class="w-20 sm:w-24 bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 font-mono uppercase" value="ALL" maxlength="3" oninput="updateCountryParam()">
+                            <span class="text-[10px] sm:text-xs text-slate-500" data-i18n="country_hint">Code (US, CN, JP) or ALL</span></div></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 sm:mb-2" data-i18n="target_api">Target API</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="api-url" class="flex-1 bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-3 text-sm text-slate-300 font-mono" value="/api/get?protocol=socks5&country=ALL">
+                            <button onclick="fetchProxy()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 sm:px-6 rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-lg active:scale-95 whitespace-nowrap"><i data-lucide="play" class="w-4 h-4"></i> <span data-i18n="fetch">Fetch</span></button></div></div>
+                </div>
+                <div class="space-y-3 sm:space-y-4">
+                    <div class="hidden md:block"><label class="block text-xs font-bold uppercase tracking-wider mb-2">&nbsp;</label><div class="flex gap-2 items-center"><div class="w-24 h-[38px] border border-transparent"></div></div></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 sm:mb-2" data-i18n="result">Result (IP)</label>
+                        <div class="flex gap-2 items-center">
+                            <div class="relative group flex-1"><input type="text" id="api-result" readonly class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-3 text-base sm:text-lg font-mono text-emerald-400 focus:outline-none" data-i18n-placeholder="waiting" placeholder="Waiting...">
+                                <div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="copyResult()" class="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white" title="Copy"><i data-lucide="copy" class="w-4 h-4"></i></button></div></div>
+                            <div id="api-country" class="px-3 bg-slate-800 rounded-lg text-lg text-emerald-400 font-mono border border-slate-700 whitespace-nowrap flex items-center">[--]</div>
+                        </div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Countries -->
+    <div class="max-w-7xl mx-auto w-full mt-4 sm:mt-8">
+        <div class="glass p-4 sm:p-6 rounded-2xl border border-slate-700/50">
+            <h2 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="text-purple-400"></i>
+                <span class="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent" data-i18n="top_countries">Active IP Distribution (Top 5)</span></h2>
+            <div class="overflow-x-auto rounded-lg border border-slate-700/50">
+                <table class="w-full text-xs sm:text-sm text-left text-slate-400">
+                    <thead class="text-xs text-slate-500 uppercase bg-slate-800/50"><tr><th class="px-2 sm:px-4 py-2 w-12">#</th><th class="px-2 sm:px-4 py-2" data-i18n="count">Count</th><th class="px-2 sm:px-4 py-2" data-i18n="country_col">Country</th></tr></thead>
+                    <tbody id="top-countries-body" class="bg-slate-900/30"><tr><td colspan="3" class="px-4 py-2 text-center text-slate-600 italic" data-i18n="loading">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generator -->
+    <div class="max-w-7xl mx-auto w-full mt-4 sm:mt-8">
+        <div class="glass p-4 sm:p-8 rounded-2xl border border-slate-700/50">
+            <h2 class="text-lg sm:text-xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
+                <i data-lucide="link" class="w-5 h-5 sm:w-6 sm:h-6 text-blue-400"></i>
+                <span data-i18n="api_gen">API Link Generator</span></h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                <div class="space-y-4 sm:space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <label class="sm:w-24 text-slate-400 text-sm" data-i18n="gen_country">Country</label>
+                        <div class="flex gap-3 sm:gap-4 items-center flex-wrap">
+                            <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="gen_country_mode" value="all" checked onchange="updateGenLink()" class="accent-blue-500"> <span data-i18n="gen_all">All</span></label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="gen_country_mode" value="custom" onchange="updateGenLink()" class="accent-blue-500"> <span data-i18n="gen_custom">Custom</span></label>
+                            <input type="text" id="gen_country_input" placeholder="US,CN" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 w-16 sm:w-20 text-sm hidden" oninput="updateGenLink()"></div></div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <label class="sm:w-24 text-slate-400 text-sm" data-i18n="gen_proto">Protocol</label>
+                        <div class="flex gap-2 sm:gap-4 flex-wrap">
+                            <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="gen_proto" value="http" checked onchange="updateGenLink()" class="accent-blue-500"> HTTP</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="gen_proto" value="https" onchange="updateGenLink()" class="accent-blue-500"> HTTPS</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="gen_proto" value="socks5" onchange="updateGenLink()" class="accent-blue-500"> SOCKS5</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="gen_proto" value="socks4" onchange="updateGenLink()" class="accent-blue-500"> SOCKS4</label></div></div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <label class="sm:w-24 text-slate-400 text-sm" data-i18n="gen_num">Count</label>
+                        <div class="flex items-center bg-slate-800 rounded border border-slate-700">
+                            <button onclick="changeNum(-10)" class="px-2 sm:px-3 py-1 hover:bg-slate-700 text-sm">-</button>
+                            <input type="number" id="gen_num" value="50" class="w-12 sm:w-16 bg-transparent text-center text-sm" oninput="updateGenLink()">
+                            <button onclick="changeNum(10)" class="px-2 sm:px-3 py-1 hover:bg-slate-700 text-sm">+</button></div></div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <label class="sm:w-24 text-slate-400 text-sm" data-i18n="gen_format">Format</label>
+                        <div class="flex gap-3 sm:gap-4">
+                            <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="gen_format" value="txt" checked onchange="updateGenLink()" class="accent-blue-500"> TXT</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="gen_format" value="json" onchange="updateGenLink()" class="accent-blue-500"> JSON</label></div></div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4" id="sep_control">
+                        <label class="sm:w-24 text-slate-400 text-sm" data-i18n="gen_sep">Separator</label>
+                        <div class="flex gap-2 sm:gap-3 text-xs sm:text-sm flex-wrap">
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="gen_sep" value="\r\n" checked onchange="updateGenLink()" class="accent-blue-500"> \r\n</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="gen_sep" value="\n" onchange="updateGenLink()" class="accent-blue-500"> \n</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="gen_sep" value="\t" onchange="updateGenLink()" class="accent-blue-500"> Tab</label></div></div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <label class="sm:w-24 text-slate-400 text-sm" data-i18n="gen_options">Options</label>
+                        <div class="flex flex-wrap gap-x-4 gap-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="gen_exclude" onchange="updateGenLink()" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-blue-500"><span class="text-sm" data-i18n="gen_exclude">Exclude (dedup)</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="gen_fallback" onchange="updateGenLink()" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-emerald-500"><span class="text-sm" data-i18n="gen_fallback">Fallback</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="gen_show_country" onchange="updateGenLink()" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-blue-500"><span class="text-sm" data-i18n="gen_show_country">Show Country</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="gen_anonymous" checked onchange="updateGenLink()" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-orange-400"><span class="text-sm" data-i18n="gen_anonymous">Anonymous</span></label></div></div>
+                </div>
+                <div class="bg-slate-900 rounded-lg p-4 border border-slate-700 flex flex-col gap-3 sm:gap-4">
+                    <label class="text-slate-400 text-sm" data-i18n="gen_result">Generated API Link:</label>
+                    <textarea id="gen_result" class="flex-1 bg-black/30 border border-slate-700 rounded p-3 text-blue-400 font-mono text-xs sm:text-sm break-all resize-none" readonly></textarea>
+                    <div class="flex gap-3">
+                        <button onclick="copyLink()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-sm transition flex items-center justify-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> <span data-i18n="copy">Copy</span></button>
+                        <button onclick="openLink()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-sm transition flex items-center justify-center gap-2"><i data-lucide="external-link" class="w-4 h-4"></i> <span data-i18n="open">Open</span></button></div></div>
+            </div>
+            <div class="mt-6 sm:mt-8 border-t border-slate-700/50 pt-4 sm:pt-6">
+                <h3 class="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 sm:mb-4" data-i18n="api_examples">API Examples (click to fill)</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs font-mono text-slate-300">
+                    <div class="bg-slate-900/50 p-3 rounded border border-slate-800 cursor-pointer hover:border-blue-500/50 transition-colors" onclick="fillApiUrl('/api/get?protocol=http')"><span>/api/get?protocol=http</span></div>
+                    <div class="bg-slate-900/50 p-3 rounded border border-slate-800 cursor-pointer hover:border-blue-500/50 transition-colors" onclick="fillApiUrl('/api/get?protocol=https')"><span>/api/get?protocol=https</span></div>
+                    <div class="bg-slate-900/50 p-3 rounded border border-slate-800 cursor-pointer hover:border-blue-500/50 transition-colors" onclick="fillApiUrl('/api/get?protocol=socks4')"><span>/api/get?protocol=socks4</span></div>
+                    <div class="bg-slate-900/50 p-3 rounded border border-slate-800 cursor-pointer hover:border-blue-500/50 transition-colors" onclick="fillApiUrl('/api/get?protocol=socks5')"><span>/api/get?protocol=socks5</span></div>
+                    <div class="bg-slate-900/50 p-3 rounded border border-slate-800 cursor-pointer hover:border-blue-500/50 transition-colors" onclick="fillApiUrl('/api/get?country=CN')"><span>/api/get?country=CN</span></div>
+                    <div class="bg-slate-900/50 p-3 rounded border border-slate-800 cursor-pointer hover:border-blue-500/50 transition-colors" onclick="fillApiUrl('/api/get?country=US&protocol=http&num=1')"><span>/api/get?country=US&protocol=http&num=1</span></div></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-auto pt-8 sm:pt-12 text-center text-slate-600 text-xs sm:text-sm">&copy; Built with Passion &amp; Speed.</footer>
+
+    <script>
+        lucide.createIcons();
+
+        // ===================== i18n =====================
+        const I18N = {
+            zh: {
+                title: '代理线程池 - 轮换器', subtitle: '实时代理 IP 检测与分发控制台', theme: '主题',
+                db_total: '数据库存量', online: '当前在线', available: '可用代理',
+                api_tester: 'API 调试工具', country_label: '指定地区', country_hint: '国家代码 (US, CN, JP) 或 ALL',
+                target_api: '目标 API 链接', fetch: '提取', result: '提取结果 (IP)',
+                top_countries: '活跃 IP 分布 (Top 5)', count: '数量', country_col: '国家', loading: '加载中...',
+                api_gen: 'API 链接生成器',
+                gen_country: '地区选择', gen_all: '全部地区', gen_custom: '指定地区',
+                gen_proto: 'IP 协议', gen_num: '提取数量', gen_format: '数据格式', gen_sep: '分隔符',
+                gen_options: '其他选项', gen_exclude: '提取后从池中剔除 (去重)', gen_fallback: '开启历史回溯 (Fallback)',
+                gen_show_country: '显示国家', gen_anonymous: '是否匿名',
+                gen_result: '生成的 API 链接:', copy: '复制链接', open: '浏览器打开',
+                api_examples: 'API 调用示例 (点击可自动填充)',
+                waiting: '等待提取...', fetching: '正在提取...', not_found: '未找到匹配数据', batch_ok: '成功获取', ip_short: 'IP不足',
+                many: '多个', multi: '多行', err_prefix: '错误:',
+            },
+            en: {
+                title: 'Proxy Pool Rotator', subtitle: 'Real-time proxy IP check & dispatch console', theme: 'Theme',
+                db_total: 'DB Total', online: 'Online', available: 'Available',
+                api_tester: 'API Tester', country_label: 'Country', country_hint: 'Code (US, CN, JP) or ALL',
+                target_api: 'Target API', fetch: 'Fetch', result: 'Result (IP)',
+                top_countries: 'Active IP Distribution (Top 5)', count: 'Count', country_col: 'Country', loading: 'Loading...',
+                api_gen: 'API Link Generator',
+                gen_country: 'Country', gen_all: 'All', gen_custom: 'Custom',
+                gen_proto: 'Protocol', gen_num: 'Count', gen_format: 'Format', gen_sep: 'Separator',
+                gen_options: 'Options', gen_exclude: 'Exclude (dedup)', gen_fallback: 'Fallback',
+                gen_show_country: 'Show Country', gen_anonymous: 'Anonymous',
+                gen_result: 'Generated API Link:', copy: 'Copy', open: 'Open',
+                api_examples: 'API Examples (click to fill)',
+                waiting: 'Waiting...', fetching: 'Fetching...', not_found: 'Not Found', batch_ok: 'Got', ip_short: 'IPs Insufficient',
+                many: 'Multiple', multi: 'Multi-line', err_prefix: 'Error:',
+            }
+        };
+        let currentLang = 'en';
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === (lang === 'zh' ? '中' : 'EN')));
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (I18N[lang] && I18N[lang][key]) el.textContent = I18N[lang][key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (I18N[lang] && I18N[lang][key]) el.placeholder = I18N[lang][key];
+            });
+            localStorage.setItem('lang', lang);
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+            lucide.createIcons();
+        }
+        // Auto-detect from browser
+        (function initLang() {
+            const saved = localStorage.getItem('lang');
+            if (saved) { setLang(saved); return; }
+            const navLang = navigator.language || navigator.userLanguage || '';
+            setLang(navLang.startsWith('zh') ? 'zh' : 'en');
+        })();
+
+        // ===================== Theme =====================
+        function setTheme(name) {
+            if (name === 'ocean') document.documentElement.removeAttribute('data-theme');
+            else document.documentElement.setAttribute('data-theme', name);
+            document.querySelectorAll('.theme-btn').forEach((b, i) => b.classList.toggle('active', ['ocean','purple','forest','sunset','light'][i] === name));
+            localStorage.setItem('theme', name);
+        }
+        (function initTheme() { setTheme(localStorage.getItem('theme') || 'ocean'); })();
+
+        // ===================== Stats =====================
+        let stats = {};
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/stats'); stats = await res.json();
+                document.getElementById('db-total').innerText = stats.db_total || 0;
+                document.getElementById('total-active').innerText = stats.total_active || 0;
+                ['http','https','socks4','socks5'].forEach(p => { document.getElementById('count-'+p).innerText = stats[p] || 0; });
+                const topBody = document.getElementById('top-countries-body');
+                if (topBody && stats.top_countries?.length) {
+                    topBody.innerHTML = stats.top_countries.map((item, i) => `<tr class="border-b border-slate-700/50 hover:bg-slate-800/20 transition-colors">
+                        <td class="px-2 sm:px-4 py-2 font-mono text-slate-500">#${i+1}</td>
+                        <td class="px-2 sm:px-4 py-2 font-mono text-emerald-400 font-bold">${item.count}</td>
+                        <td class="px-2 sm:px-4 py-2"><div class="flex items-center gap-2 sm:gap-3">
+                        <img src="https://flagcdn.com/24x18/${item.country_code.toLowerCase()}.png" class="rounded-[2px] shadow-sm opacity-90 w-5 sm:w-6 h-3.5 sm:h-4 object-cover ring-1 ring-slate-700" alt="${item.country_code}" onerror="this.style.display='none'">
+                        <span class="text-slate-300 font-semibold tracking-wide text-xs sm:text-sm">${item.country_code}</span></div></td></tr>`).join('');
+                } else if (topBody) topBody.innerHTML = `<tr><td colspan="3" class="px-4 py-2 text-center text-slate-600 italic">${I18N[currentLang].loading}</td></tr>`;
+            } catch(e) {}
+        }
+        setInterval(updateStats, 10000); updateStats();
+
+        async function updateSystemStats() {
+            try {
+                const r = await fetch('/api/system'); if (!r.ok) return; const d = await r.json();
+                const cpu = document.getElementById('cpu-usage'); if (cpu) {
+                    cpu.innerText = d.cpu.toFixed(1) + '%';
+                    cpu.className = `text-base sm:text-3xl font-mono ${d.cpu>80?'text-red-400':d.cpu>50?'text-amber-400':'text-blue-300'} font-bold leading-none`;
+                }
+                const mem = document.getElementById('mem-usage'); if (mem) {
+                    mem.innerText = d.mem.toFixed(1) + '%';
+                    mem.className = `text-base sm:text-3xl font-mono ${d.mem>80?'text-red-400':d.mem>60?'text-amber-400':'text-purple-300'} font-bold leading-none`;
+                }
+            } catch(e) {}
+        }
+        setInterval(updateSystemStats, 5000); updateSystemStats();
+
+        // ===================== Generator =====================
+        function changeNum(d) { const i = document.getElementById('gen_num'); i.value = Math.max(1, (parseInt(i.value) || 50) + d); updateGenLink(); }
+        function updateGenLink() {
+            const h = window.location.host, p = window.location.protocol;
+            const cm = document.querySelector('input[name="gen_country_mode"]:checked').value;
+            const ci = document.getElementById('gen_country_input');
+            let country = '';
+            if (cm === 'custom') { ci.classList.remove('hidden'); country = ci.value.trim(); } else { ci.classList.add('hidden'); }
+            const proto = document.querySelector('input[name="gen_proto"]:checked').value;
+            const num = document.getElementById('gen_num').value;
+            const fmt = document.querySelector('input[name="gen_format"]:checked').value;
+            const sepCtrl = document.getElementById('sep_control');
+            sepCtrl.classList.toggle('opacity-25', fmt === 'json'); sepCtrl.classList.toggle('pointer-events-none', fmt === 'json');
+            const sep = document.querySelector('input[name="gen_sep"]:checked').value;
+            let url = `${p}//${h}/api/get?protocol=${proto}`;
+            if (country) url += `&country=${country}`;
+            url += `&num=${num}`;
+            if (fmt !== 'json') url += `&format=${fmt}`;
+            if (fmt === 'txt' && sep !== '\\r\\n') url += `&sep=${encodeURIComponent(sep)}`;
+            if (document.getElementById('gen_exclude').checked) url += '&exclude=true';
+            url += `&fallback=${document.getElementById('gen_fallback').checked}`;
+            url += `&show_country=${document.getElementById('gen_show_country').checked}`;
+            url += `&anonymous=${document.getElementById('gen_anonymous').checked}`;
+            document.getElementById('gen_result').value = url;
+        }
+        updateGenLink();
+        function copyLink() { navigator.clipboard.writeText(document.getElementById('gen_result').value); }
+        function openLink() { window.open(document.getElementById('gen_result').value, '_blank'); }
+
+        // ===================== API Tester =====================
+        function updateCountryParam() {
+            const c = (document.getElementById('api-country-input').value.trim().toUpperCase() || 'ALL');
+            let url = document.getElementById('api-url').value;
+            url = url.includes('country=') ? url.replace(/country=[^&]*/i, 'country=' + c) : url + (url.includes('?') ? '&' : '?') + 'country=' + c;
+            document.getElementById('api-url').value = url;
+        }
+        async function fetchProxy() {
+            const ui = document.getElementById('api-url'), ri = document.getElementById('api-result'), cb = document.getElementById('api-country');
+            const btn = document.querySelector('button[onclick="fetchProxy()"]');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> ${I18N[currentLang].fetching}`;
+            lucide.createIcons();
+            ri.value = I18N[currentLang].fetching; ri.classList.remove('text-emerald-400','text-red-400'); ri.classList.add('text-slate-400');
+            cb.innerText = '[...]'; cb.classList.remove('hidden');
+            try {
+                let url = ui.value.trim(); if (url.startsWith('/')) url = window.location.protocol + '//' + window.location.host + url;
+                if (!url) throw new Error('URL required');
+                const r = await fetch(url); if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                const ct = r.headers.get('content-type') || ''; let data, isJson = ct.includes('application/json');
+                data = isJson ? await r.json() : await r.text();
+                let dv = '';
+                if (isJson) {
+                    if (Array.isArray(data)) {
+                        if (data.length > 0) {
+                            if (data.length === 1) { dv = `${data[0].ip}:${data[0].port}`; showCountryBadge(data[0], cb); }
+                            else { dv = `${I18N[currentLang].batch_ok} ${data.length} IPs`; console.log(data); cb.innerText = `[${I18N[currentLang].many}]`; }
+                        } else { dv = I18N[currentLang].not_found; cb.innerText = '[--]'; }
+                    } else if (data.ip && data.port) { dv = `${data.ip}:${data.port}`; showCountryBadge(data, cb); }
+                    else { dv = JSON.stringify(data); }
+                } else {
+                    const lines = data.trim().split(/[\r\n]+/);
+                    if (lines.length === 1 && lines[0]) {
+                        const parts = lines[0].split('|'); dv = parts[0];
+                        cb.innerText = parts.length > 1 && parts[1] ? `[${parts[1]}]` : '[--]';
+                    } else { dv = data; cb.innerText = `[${I18N[currentLang].multi}]`; }
+                }
+                ri.classList.add(dv === I18N[currentLang].ip_short ? 'text-red-400' : 'text-emerald-400');
+                ri.value = dv;
+            } catch(e) { ri.value = `${I18N[currentLang].err_prefix} ${e.message}`; ri.classList.add('text-red-400'); }
+            finally { btn.disabled = false; btn.innerHTML = orig; lucide.createIcons(); }
+        }
+        function showCountryBadge(data, badge) {
+            const hasC = data.country_code && data.country_code !== '' && data.country_code !== 'Unknown';
+            const hasN = data.country && data.country !== '' && data.country !== 'Unknown';
+            if (hasC && hasN) badge.innerText = `[${data.country_code}] ${data.country}`;
+            else if (hasN) badge.innerText = `[${data.country}]`; else if (hasC) badge.innerText = `[${data.country_code}]`; else badge.innerText = '[--]';
+        }
+        function selectProtocol(proto) { mergeApiParams({ protocol: proto, num: 1, fallback: 'false' }); }
+        function fillApiUrl(urlOrParams) {
+            if (typeof urlOrParams === 'string') {
+                let s = urlOrParams; if (s.startsWith('/')) s = 'http://dummy.com' + s;
+                try { const u = new URL(s); const p = {}; u.searchParams.forEach((v,k) => p[k]=v); mergeApiParams(p); } catch(e) { document.getElementById('api-url').value = urlOrParams; }
+            } else mergeApiParams(urlOrParams);
+        }
+        function mergeApiParams(np) {
+            const ui = document.getElementById('api-url'); let cs = ui.value.trim(); const base = 'http://localhost:8000';
+            let u;
+            try { u = cs.startsWith('http') ? new URL(cs) : cs.startsWith('/') ? new URL(base + cs) : new URL(base + '/api/get' + (cs.startsWith('?') ? cs : '?' + cs)); }
+            catch(e) { u = new URL(base + '/api/get'); }
+            Object.entries(np).forEach(([k,v]) => { if (v === null || v === undefined) u.searchParams.delete(k); else u.searchParams.set(k, v); });
+            ui.value = ui.value.trim().startsWith('http') ? u.toString() : u.pathname + u.search;
+            ui.classList.add('ring-2','ring-blue-500'); setTimeout(() => ui.classList.remove('ring-2','ring-blue-500'), 300);
+        }
+        function copyResult() { const v = document.getElementById('api-result').value; if (v && !v.includes(I18N[currentLang].waiting)) navigator.clipboard.writeText(v); }
+    </script>
+</body>
+</html>

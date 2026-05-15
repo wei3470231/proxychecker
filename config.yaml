@@ -1,0 +1,159 @@
+# ==============================================================================
+# 🔴 Redis 数据库配置
+# ==============================================================================
+# 基础域名变量 (用于替换 {{domain}})
+base_domain: "domain.com"
+base_port_webapi: "16378"
+base_port_redis: "16379"
+# 监听端口 (支持 HTTP/SOCKS5 混合协议)
+rotator_port: "16377"
+# Redis 连接地址 (密码用 {{redis_password}} 引用)
+# 格式: redis://:密码@IP:端口/库
+redis_url: "redis://:{{redis_password}}@{{base_domain}}:{{base_port_redis}}/1"
+# Redis 密码 (独立字段，通过 {{redis_password}} 注入到 URL)
+redis_password: "Password321"
+# Redis 连接超时 (秒)
+redis_connect_timeout: 5
+# 分布式锁过期时间 (秒)，防止死锁
+distributed_lock_ttl: 300
+# 获取锁重试间隔 (毫秒)
+lock_retry_interval: 100
+
+# ==============================================================================
+# 🌐 网络与 DNS，linux专用
+# ==============================================================================
+# 自定义 DNS 服务器 (如果解析失败，尝试 223.5.5.5:53 或 1.1.1.1:53)
+# 留空使用系统默认
+dns_server_list:
+  - "223.5.5.5:53"   # 阿里 DNS (优先)
+  - "8.8.8.8:53"     # Google DNS
+  - "1.1.1.1:53"     # Cloudflare DNS
+
+# ==============================================================================
+# ⚡ 核心性能配置
+# ==============================================================================
+# 并发协程数 (Worker 数量)，Windows 下建议 10-50
+concurrency: 100
+# 目标队列大小 (水位线)，系统维持的待测 IP 数量
+queue_target_size: 2000
+# 入库批处理大小
+batch_size_storage_add: 1000
+# 取出批处理大小
+batch_size_storage_get: 1000
+
+# ==============================================================================
+# 🌐 网络请求配置
+# ==============================================================================
+# 代理检测超时 (秒)
+check_timeout: 5
+# 采集源下载超时 (秒)
+scraper_timeout: 15
+# 模拟 User-Agent
+user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+# ==============================================================================
+# 🛠️ 检测逻辑配置
+# ==============================================================================
+# 跳过 TLS 证书验证 (false=验证证书，防止问题代理通过检测)
+insecure_skip_verify: false
+# -----------------------------策略1--------------------------------------------
+enable_checker_type1: true
+# 该策略启用后，直接以返回参数作为判断标准
+check_url1: "https://ip.me"
+# ------------------------------策略2--------------------------------------------
+# 可用性验证 URL（二期检测）
+check_url2: "https://docs.github.com/en/support/contacting-github-support"
+# 可用性验证关键字（留空则仅检查 HTTP 状态码）
+check_keyword2: "/site-policy/github-terms/github-terms-of-service"
+# 归属地查询 API 模板 (%s 会被替换为 IP)
+
+# ==============================================================================
+# 🔒 安全配置
+# ==============================================================================
+# 全局密码 (用于 Web 登录 / API 提取 / 代理认证)
+password: "Password321"
+# 代理认证用户名 (SOCKS5/HTTP 代理连接时的用户名)
+username: "user"
+
+# ==============================================================================
+# 🎛️ 模块开关 (功能控制)
+# ==============================================================================
+# 是否启用检测器 (验证 IP 可用性)
+enable_checker: true
+# 是否启用采集器 (自动从 URL/File 获取 IP)
+enable_scraper: false
+# 是否启用 API 服务 (提供 HTTP 接口)
+enable_api: false
+# 是否启用 代理轮换 服务 (提供 HTTP/SOCKS5 混合协议)
+enable_rotator: false
+# 是否检测 HTTP 协议 (关闭后只检测 HTTPS/SOCKS5/SOCKS4)
+enable_check_http: true
+# 是否启用调试模式 (显示详细错误信息)
+debug_mode: false
+
+# ==============================================================================
+# 🔁 循环与间隔配置 (秒)
+# ==============================================================================
+# 代理 IP 有效期 (分钟)，超过此时间未验证将被视为过期
+proxy_lease_time: 10
+# 阈值监控间隔 (补充队列)   #分钟
+interval_threshold: 5
+# 采集器运行间隔
+interval_scraper: 300
+# Worker 状态日志打印间隔
+log_interval_worker: 10
+# API Server 日志打印间隔
+log_interval_server: 10
+# Checker 内部进度日志频率 (按数量)
+log_interval_checker: 100
+
+# ==============================================================================
+# 📡 API 服务配置
+# ==============================================================================
+server_host: "0.0.0.0"
+server_port: "{{base_port_webapi}}"
+# 获取代理后是否立即从池中移除 (False=保留，True=一次性使用)
+api_exclude_after_get: false
+
+# ==============================================================================
+# 🔄 轮换代理服务 (Rotator)
+# ==============================================================================
+# 用户名即国家代码 (例如 "US:pass")
+# 单次连接超时 (毫秒)
+rotator_dial_timeout: 3000
+# 最大重试次数 (遇到死代理自动切换)
+rotator_retry_count: 5
+# 直连白名单 (支持通配符 *, 逗号分隔或列表)
+rotator_bypass_list:
+  - "127.0.0.1"
+  - "192.168.*"
+  - "domain.com"
+  - "*.local"
+
+# ==============================================================================
+# 🛡️ 质量门槛配置 (Quality Gate)
+# ==============================================================================
+# 是否开启质量过滤，剔除历史成功率低的 IP
+filter_quality_gate_enabled: true
+# 触发过滤的最小总检测次数
+filter_min_total_checks: 100
+# 最低成功次数要求 (低于此值将被拦截)
+filter_min_success_count: 20
+
+# ==============================================================================
+# 📥 代理采集源
+# ==============================================================================
+# 在线订阅源 URL 列表
+proxy_sources_url:
+  - "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt"
+  - "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt"
+  - "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks4.txt"
+  - "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt"
+  - "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/all/data.txt"
+
+# 本地文件列表读取
+proxy_sources_txt:
+  - "proxies.txt"
+
+# 本地 URL 列表文件 (一行一个 URL)
+proxy_url_file: "tarurl.txt"
