@@ -25,7 +25,7 @@ pending<阈值   → Monitor → proxy:all_seen 回填 (跳过活跃)
 
 ## 快速开始
 
-- Redis 必须运行，默认 `localhost:6379`
+- Redis 必须运行，默认 `localhost:16379`
 - Go 1.20+ 编译
 
 ```bash
