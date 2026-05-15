@@ -1,6 +1,11 @@
-# Antigravity Proxy Checker
-
+# Free Proxy Checker
 高性能代理 IP 采集、检测、分发系统。Go 语言构建，SOCKS5/HTTP/HTTPS/SOCKS4 全协议代理池管理。
+
+支持闲置安卓手机部署该项目，只需要安装termux，将编译二进制文件和配置文件导入termux，即可多设备采集、校验、筛选IP和分发IP。完全解耦，可以把手机和电脑混合在一起采集、校验IP，并统一分发。
+
+采用双重验证机制（验证2个网址，只允许2个网址返回的IP一致才算作有效IP，从而大大提高IP的可用性）。
+
+同时支持tls代理，可以有效识别伪造IP的代理（通过证书指纹对比），不会出现缺少证书的情况。
 
 ## 功能模块
 
@@ -29,7 +34,9 @@ pending<阈值   → Monitor → proxy:all_seen 回填 (跳过活跃)
 - Go 1.20+ 编译
 
 ```bash
-go build -o build\proxychecker.exe .
+go build -o build\proxychecker.exe . # windows 平台手动编译
+build_all.bat # windows 和 android 平台编译
+build_all.sh # linux/mac/android 平台编译
 ```
 
 Android (Termux)：复制二进制 + config.yaml + web/ 到 $HOME，`chmod +x` 运行。Android 上需设 `insecure_skip_verify: true`（无 root CA）。
