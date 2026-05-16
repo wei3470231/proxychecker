@@ -7,6 +7,11 @@
 
 同时支持tls，可以有效识别伪造IP的代理（通过证书指纹对比），不会出现缺少证书的情况。
 
+<img width="1872" height="932" alt="1" src="https://github.com/user-attachments/assets/77854854-4677-4f60-91b9-78526b81e09f" />
+<img width="1872" height="932" alt="2" src="https://github.com/user-attachments/assets/8ac61618-3647-425b-9b5b-6eda8c385665" />
+<img width="800" height="560" alt="3" src="https://github.com/user-attachments/assets/3da50427-267b-4740-955f-5a8fbd19213d" />
+
+
 ## 功能模块
 
 | 模块 | 说明 |
